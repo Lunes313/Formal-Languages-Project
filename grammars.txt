@@ -1,0 +1,12 @@
+3
+3
+S -> S+T T
+T -> T*F F
+F -> (S) i
+3
+S -> AB
+A -> aA d
+B -> bBc /eps
+2
+S -> A
+A -> A b
