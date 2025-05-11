@@ -1,4 +1,5 @@
-import LL1_PARSER
+import LL1_PARSER as ll1
+import SLR1_PARSER as slr1
 grammars = []
 
 
@@ -83,19 +84,62 @@ def print_grammars():
             if choice == 0:
                 break
             elif 1 <= choice <= len(grammars):
-                if LL1_PARSER.is_ll1(grammars[choice - 1]):
-                    print("The grammar is LL(1).")
-                    LL1_PARSER.print_parsing_table(grammars[choice - 1])
-                    string = input("Enter a string to parse: ")
-                    LL1_PARSER.print_derivation(grammars[choice - 1], string)
+                is_grammar_ll1 = ll1.is_ll1(grammars[choice - 1])
+                is_grammar_slr1 = slr1.is_slr1(grammars[choice - 1])
+
+                if is_grammar_ll1 and is_grammar_slr1:
+                    while True:
+                        parser_choice = input(
+                            "Select a parser (T: for LL(1), B: for SLR(1), Q: quit): ").strip().upper()
+
+                        if parser_choice == 'Q':
+                            break
+                        elif parser_choice == 'T':
+                            ll1.print_ll_table(grammars[choice - 1])
+                            parse_strings(grammars[choice - 1], ll1.parse_string)
+                        elif parser_choice == 'B':
+                            slr1.print_slr_table(grammars[choice - 1])
+                            parse_strings(grammars[choice - 1], slr1.parse_string)
+                        else:
+                            print("Invalid option. Please try again.")
+
+                elif is_grammar_ll1:
+                    print("Grammar is LL(1).")
+                    ll1.print_ll_table(grammars[choice - 1])
+                    parse_strings(grammars[choice - 1], ll1.parse_string)
+
+                elif is_grammar_slr1:
+
+                    print("Grammar is SLR(1).")
+                    slr1.print_slr_table(grammars[choice - 1])
+                    parse_strings(grammars[choice - 1], slr1.parse_string)
                 else:
-                    print("The grammar is not LL(1).")
+
+                    print("Grammar is neither LL(1) nor SLR(1).")
 
                 break
             else:
                 print("Invalid choice. Please enter a number between 1 and", len(grammars))
         except ValueError:
             print("Invalid input. Please enter a number.")
+
+def parse_strings(grammar_data, parse_function):
+    while True:
+        try:
+
+            print("\nEnter a string to parse (or press Enter to exit):")
+            input_string = input().strip()
+
+            if not input_string:
+                break
+
+            if parse_function(grammar_data, input_string):
+                print("yes")
+            else:
+                print("no")
+
+        except EOFError:
+            break
 
 
 def menu():

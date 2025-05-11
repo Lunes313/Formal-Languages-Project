@@ -23,7 +23,7 @@ def create_parsing_table(grammar_data):
 
     return parsing_table
 
-def print_parsing_table(grammar_data):
+def print_ll_table(grammar_data):
     terminals = grammar_data['terminals'].copy()
     terminals.discard("ε")
     terminals.add("$")
@@ -98,6 +98,62 @@ def print_derivation(grammar_data, string):
     headers = ["Stack", "Input", "Action"]
     print(tabulate(derivation_table, headers=headers, tablefmt="grid"))
 
+
+def parse_string(grammar_data, input_string, verbose=False):
+    grammar = grammar_data['grammar']
+    parsing_table = create_parsing_table(grammar_data)
+
+    stack = ['$', list(grammar.keys())[0]]
+    input_string = input_string + '$'
+    input_pos = 0
+
+    derivation_steps = []
+
+    while stack[-1] != '$' or input_string[input_pos] != '$':
+        stack_top = stack[-1]
+        current_input = input_string[input_pos]
+
+        stack_str = ''.join(stack[::-1])
+        input_str = input_string[input_pos:]
+
+        if stack_top in grammar_data['terminals']:
+            if stack_top == current_input:
+                action = f"Emparejar '{stack_top}'"
+                stack.pop()
+                input_pos += 1
+            else:
+                if verbose:
+                    derivation_steps.append(
+                        [stack_str, input_str, f"Error: Se esperaba '{stack_top}', se encontró '{current_input}'"])
+                    print(tabulate(derivation_steps, headers=["Pila", "Entrada", "Acción"], tablefmt="grid"))
+                return False
+        else:
+            if current_input in parsing_table[stack_top] and parsing_table[stack_top][current_input]:
+                production = parsing_table[stack_top][current_input]
+                action = f"{stack_top} -> {production}"
+
+                stack.pop()
+                if production != 'ε':
+                    for symbol in reversed(production):
+                        stack.append(symbol)
+            else:
+                if verbose:
+                    derivation_steps.append(
+                        [stack_str, input_str, f"Error: No hay producción para {stack_top} con '{current_input}'"])
+                    print(tabulate(derivation_steps, headers=["Pila", "Entrada", "Acción"], tablefmt="grid"))
+                return False
+
+        if verbose:
+            derivation_steps.append([stack_str, input_str, action])
+
+    if stack[-1] == '$' and input_string[input_pos] == '$':
+        if verbose:
+            derivation_steps.append(['$', '$', "Aceptar"])
+            print(tabulate(derivation_steps, headers=["Pila", "Entrada", "Acción"], tablefmt="grid"))
+        return True
+
+    return False
+
 def is_ll1(grammar_data):
     for nt, productions in grammar_data['grammar'].items():
         for p1 in range(len(productions)-1):
@@ -109,6 +165,8 @@ def is_ll1(grammar_data):
                 if not FIRST(grammar_data, production1).isdisjoint(FIRST(grammar_data, production2)):
                     return False
     return True
+
+
 
 
 
