@@ -1,5 +1,3 @@
-from dateutil.rrule import parser
-
 import LL1_PARSER as ll1
 import SLR1_PARSER as slr1
 grammars = []
@@ -98,10 +96,10 @@ def print_grammars():
                             break
                         elif parser_choice == 'T':
                             ll1.print_ll_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], ll1.parse_string, parser_choice)
+                            parse_strings(grammars[choice - 1], ll1.parse_string)
                         elif parser_choice == 'B':
                             slr1.print_slr_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], slr1.parse_string, parser_choice)
+                            parse_strings(grammars[choice - 1], slr1.parse_string,)
                         else:
                             print("Invalid option. Please try again.")
 
@@ -125,7 +123,7 @@ def print_grammars():
         except ValueError:
             print("Invalid input. Please enter a number.")
 
-def parse_strings(grammar_data, parse_function, parser_choice):
+def parse_strings(grammar_data, parse_function):
     while True:
         try:
 
@@ -135,8 +133,13 @@ def parse_strings(grammar_data, parse_function, parser_choice):
             if not input_string:
                 break
 
-            if parser_choice == 'T':
+            if parse_function == ll1.parse_string:
                 ll1.print_derivation(grammar_data, input_string)
+            elif parse_function == slr1.parse_string:
+                slr1.print_derivation(grammar_data, input_string)
+            else:
+                print("Invalid parser function provided.")
+                return
 
             if parse_function(grammar_data, input_string):
                 print("yes")
@@ -146,6 +149,69 @@ def parse_strings(grammar_data, parse_function, parser_choice):
         except EOFError:
             break
 
+
+def add_grammar():
+
+    print("\n=== Add New Grammar ===")
+    print("Enter the production rules for the new grammar.")
+    print("Format: NT -> P1 P2 P3")
+    print("Use '/eps' for epsilon.")
+    print("Enter an empty line to finish.")
+
+    production_rules = []
+
+    while True:
+        rule = input("Enter a production rule (or empty line to finish): ").strip()
+        if not rule:
+            break
+
+        # Validate the rule format
+        if "->" not in rule:
+            print("Invalid format. Please use the format 'NT -> P1 P2 P3'")
+            continue
+
+        # Check if the left side is a single non-terminal
+        left_side = rule.split("->")[0].strip()
+        if len(left_side) != 1 or not left_side.isalpha() or not left_side.isupper():
+            print("Invalid non-terminal. Must be a single uppercase letter.")
+            continue
+
+        production_rules.append(rule)
+
+    if not production_rules:
+        print("No rules entered. Grammar not added.")
+        return
+
+    # Update the grammars.txt file
+    try:
+        # First read the current file to get the number of grammars
+        with open("grammars.txt", 'r') as file:
+            lines = [line.strip() for line in file if line.strip()]
+
+        # Update the number of grammars
+        if lines:
+            current_num_grammars = int(lines[0])
+            lines[0] = str(current_num_grammars + 1)
+        else:
+            # If the file is empty, start with 1 grammar
+            lines = ["1"]
+
+        # Add the new grammar
+        lines.append(str(len(production_rules)))  # Number of production rules
+        lines.extend(production_rules)
+
+        # Write back to the file
+        with open("grammars.txt", 'w') as file:
+            for line in lines:
+                file.write(line + "\n")
+
+        print(f"Grammar successfully added! ({len(production_rules)} rules)")
+
+        # Reload the grammars from the file
+        read_grammars()
+
+    except Exception as e:
+        print(f"An error occurred while updating the file: {e}")
 
 def menu():
     while True:
@@ -159,7 +225,7 @@ def menu():
         if choice == "1":
             print_grammars()
         elif choice == "2":
-            pass
+            add_grammar()
         elif choice == "3":
             print("Goodbye!")
             break
