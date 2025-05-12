@@ -96,23 +96,23 @@ def print_grammars():
                             break
                         elif parser_choice == 'T':
                             ll1.print_ll_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], ll1.parse_string)
+                            parse_strings(grammars[choice - 1], ll1.print_derivation)
                         elif parser_choice == 'B':
                             slr1.print_slr_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], slr1.parse_string,)
+                            parse_strings(grammars[choice - 1], slr1.print_reduction)
                         else:
                             print("Invalid option. Please try again.")
 
                 elif is_grammar_ll1:
                     print("Grammar is LL(1).")
                     ll1.print_ll_table(grammars[choice - 1])
-                    parse_strings(grammars[choice - 1], ll1.parse_string)
+                    parse_strings(grammars[choice - 1], ll1.print_derivation)
 
                 elif is_grammar_slr1:
 
                     print("Grammar is SLR(1).")
                     slr1.print_slr_table(grammars[choice - 1])
-                    parse_strings(grammars[choice - 1], slr1.parse_string)
+                    parse_strings(grammars[choice - 1], slr1.print_reduction)
                 else:
 
                     print("Grammar is neither LL(1) nor SLR(1).")
@@ -133,13 +133,8 @@ def parse_strings(grammar_data, parse_function):
             if not input_string:
                 break
 
-            if parse_function == ll1.parse_string:
-                ll1.print_derivation(grammar_data, input_string)
-            elif parse_function == slr1.parse_string:
-                slr1.print_derivation(grammar_data, input_string)
-            else:
-                print("Invalid parser function provided.")
-                return
+            if input_string == "/eps":
+                input_string = ""
 
             if parse_function(grammar_data, input_string):
                 print("yes")

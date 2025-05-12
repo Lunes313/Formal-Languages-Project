@@ -77,7 +77,7 @@ def canonical_collection(grammar_data):
     symbols = grammar_data['terminals'].union(grammar_data['non_terminals']) - {'ε'}
 
     start_symbol = list(grammar.keys())[0]
-    initial_item = Item('S\'', start_symbol, 0)
+    initial_item = Item("S'", start_symbol, 0)
 
     initial_state = compute_closure(grammar_data, {initial_item})
 
@@ -125,7 +125,7 @@ def create_slr_table(grammar_data):
             # Case 1: Dot is at the end of production
             if next_sym is None:
                 # Special case for accept state
-                if item.left == 'S\'' and item.right == start_symbol:
+                if item.left == "S'" and item.right == start_symbol:
                     action[(i, '$')] = ('accept', '')
                 else:
                     # For reductions, we need the FOLLOW set
@@ -137,7 +137,7 @@ def create_slr_table(grammar_data):
                             current_action = action[(i, terminal)]
                             grammar_data['conflicts'].append(
                                 f"Conflict in state {i}, terminal '{terminal}': "
-                                f"{current_action} vs ('reduce', '{item.left} -> {item.right}')"
+                                f"{current_action} vs ('Reduce', '{item.left} → {item.right}')"
                             )
                         else:
                             action[(i, terminal)] = ('reduce', (item.left, item.right))
@@ -147,7 +147,7 @@ def create_slr_table(grammar_data):
                 if (i, next_sym) in transitions:
                     next_state = transitions[(i, next_sym)]
 
-                    if (i, next_sym) in action:
+                    if (i, next_sym) in action and action[(i, next_sym)][1] != next_state:
                         # Record conflict
                         current_action = action[(i, next_sym)]
                         grammar_data['conflicts'].append(
@@ -185,7 +185,7 @@ def print_slr_table(grammar_data):
                 elif act == 'reduce':
                     left, right = value
                     right_str = right if right else 'ε'
-                    cell = f"r({left}->{right_str})"
+                    cell = f"r({left}→{right_str})"
                 elif act == 'accept':
                     cell = "acc"
                 else:
@@ -219,97 +219,17 @@ def print_slr_table(grammar_data):
 
     return action, goto_table
 
-
-def parse_string(grammar_data, input_string, verbose=False):
-    action, goto_table, _ = create_slr_table(grammar_data)
-
-    stack = [0]  # State stack
-    symbols = []  # Symbol stack
-    input_string = input_string + '$'
-    input_pos = 0
-
-    steps = []
-
-    while True:
-        state = stack[-1]
-        current_input = input_string[input_pos]
-
-        if verbose:
-            stack_str = ' '.join(map(str, stack))
-            symbols_str = ''.join(symbols)
-            input_str = input_string[input_pos:]
-
-        # Check if there's an action defined for current state and input symbol
-        if (state, current_input) not in action:
-            if verbose:
-                steps.append([stack_str, symbols_str, input_str, "Error: No action defined"])
-                print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
-            return False
-
-        act, value = action[(state, current_input)]
-
-        if act == 'shift':
-            # Shift: Add state and symbol to stacks
-            stack.append(value)
-            symbols.append(current_input)
-            input_pos += 1
-
-            if verbose:
-                steps.append([stack_str, symbols_str, input_str, f"Shift {current_input}, go to state {value}"])
-
-        elif act == 'reduce':
-            # Reduce: Apply a production rule
-            left, right = value
-            right_len = len(right) if right != 'ε' else 0
-
-            # Pop symbols and states of reduced productions
-            for _ in range(right_len):
-                stack.pop()
-                symbols.pop()
-
-            # Get state from top of stack
-            top_state = stack[-1]
-
-            # Check if there's a defined transition
-            if (top_state, left) not in goto_table:
-                if verbose:
-                    error_msg = f"Error: No GOTO for state {top_state} and non-terminal {left}"
-                    steps.append([stack_str, symbols_str, input_str, error_msg])
-                    print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
-                return False
-
-            # Perform GOTO transition
-            goto_state = goto_table[(top_state, left)]
-            stack.append(goto_state)
-            symbols.append(left)
-
-            if verbose:
-                right_str = right if right else 'ε'
-                action_msg = f"Reduce by {left} -> {right_str}, go to state {goto_state}"
-                steps.append([stack_str, symbols_str, input_str, action_msg])
-
-        elif act == 'accept':
-            # Accept: String is valid
-            if verbose:
-                steps.append([stack_str, symbols_str, input_str, "Accept"])
-                print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
-            return True
-
-    return False
-
-
-def print_derivation(grammar_data, input_string):
+def print_reduction(grammar_data, input_string):
 
     action, goto_table, _ = create_slr_table(grammar_data)
 
     stack = [0]  # State stack
-    symbols = []  # Symbol stack
+    symbols = ['$']  # Symbol stack
     input_string = input_string + '$'
     input_pos = 0
+    reductions = []  # To store reductions
 
     steps = []
-    derivation = [""]  # Start with empty derivation
-    reductions = []
 
     while True:
         state = stack[-1]
@@ -318,12 +238,11 @@ def print_derivation(grammar_data, input_string):
         stack_str = ' '.join(map(str, stack))
         symbols_str = ''.join(symbols)
         input_str = input_string[input_pos:]
-        derivation_str = ' '.join(reductions)
 
         # Check if there's an action defined for current state and input symbol
         if (state, current_input) not in action:
-            steps.append([stack_str, symbols_str, input_str, "Error: No action defined", derivation_str])
-            print(tabulate(steps, headers=["States", "Symbols", "Input", "Action", "Derivation"], tablefmt="grid"))
+            steps.append([stack_str, symbols_str, input_str, "Reject"])
+            print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
             return False
 
         act, value = action[(state, current_input)]
@@ -336,7 +255,7 @@ def print_derivation(grammar_data, input_string):
             input_pos += 1
 
             steps.append(
-                [stack_str, symbols_str, input_str, f"Shift {current_input}, go to state {next_state}", derivation_str])
+                [stack_str, symbols_str, input_str, f"Shift {next_state}"])
 
         elif act == 'reduce':
             # Reduce: Apply a production rule
@@ -353,9 +272,8 @@ def print_derivation(grammar_data, input_string):
 
             # Check if there's a defined transition
             if (top_state, left) not in goto_table:
-                error_msg = f"Error: No GOTO for state {top_state} and non-terminal {left}"
-                steps.append([stack_str, symbols_str, input_str, error_msg, derivation_str])
-                print(tabulate(steps, headers=["States", "Symbols", "Input", "Action", "Derivation"], tablefmt="grid"))
+                steps.append([stack_str, symbols_str, input_str, "Reject"])
+                print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
                 return False
 
             # Perform GOTO transition
@@ -364,29 +282,24 @@ def print_derivation(grammar_data, input_string):
             symbols.append(left)
 
             right_str = right if right else 'ε'
-            action_msg = f"Reduce by {left} -> {right_str}, go to state {goto_state}"
-
-            # Update derivation information
-            reduction = f"{left}->{right_str}"
-            reductions.append(reduction)
+            action_msg = f"Reduce {left} -> {right_str}"
+            reductions.append(f"{left} -> {right_str}")
 
             steps.append([stack_str, symbols_str, input_str, action_msg, ' '.join(reductions)])
 
         elif act == 'accept':
             # Accept: String is valid
-            steps.append([stack_str, symbols_str, input_str, "Accept", derivation_str])
-            print(tabulate(steps, headers=["States", "Symbols", "Input", "Action", "Derivation"], tablefmt="grid"))
+            steps.append([stack_str, symbols_str, input_str, "Accept"])
+            print(tabulate(steps, headers=["States", "Symbols", "Input", "Action"], tablefmt="grid"))
             return True
-
-    return False
-
 
 def is_slr1(grammar_data):
 
     # Create the SLR table and check for conflicts
-    create_slr_table(grammar_data)
+    create_slr_table(grammar_data.copy())
 
     if 'conflicts' in grammar_data and grammar_data['conflicts']:
+        print("\nDetected conflicts:")
         return False
 
     return True

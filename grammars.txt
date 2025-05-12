@@ -1,4 +1,4 @@
-3
+5
 3
 S -> S+T T
 T -> T*F F
@@ -10,3 +10,7 @@ B -> bBc /eps
 2
 S -> A
 A -> A b
+1
+S -> 0S1 /eps
+1
+S -> aSb ab
