@@ -133,6 +133,8 @@ def parse_strings(grammar_data, parse_function):
             if not input_string:
                 break
 
+            ll1.print_derivation(grammar_data, input_string)
+
             if parse_function(grammar_data, input_string):
                 print("yes")
             else:
