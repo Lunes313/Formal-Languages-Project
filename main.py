@@ -1,3 +1,5 @@
+from dateutil.rrule import parser
+
 import LL1_PARSER as ll1
 import SLR1_PARSER as slr1
 grammars = []
@@ -96,10 +98,10 @@ def print_grammars():
                             break
                         elif parser_choice == 'T':
                             ll1.print_ll_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], ll1.parse_string)
+                            parse_strings(grammars[choice - 1], ll1.parse_string, parser_choice)
                         elif parser_choice == 'B':
                             slr1.print_slr_table(grammars[choice - 1])
-                            parse_strings(grammars[choice - 1], slr1.parse_string)
+                            parse_strings(grammars[choice - 1], slr1.parse_string, parser_choice)
                         else:
                             print("Invalid option. Please try again.")
 
@@ -123,7 +125,7 @@ def print_grammars():
         except ValueError:
             print("Invalid input. Please enter a number.")
 
-def parse_strings(grammar_data, parse_function):
+def parse_strings(grammar_data, parse_function, parser_choice):
     while True:
         try:
 
@@ -133,7 +135,8 @@ def parse_strings(grammar_data, parse_function):
             if not input_string:
                 break
 
-            ll1.print_derivation(grammar_data, input_string)
+            if parser_choice == 'T':
+                ll1.print_derivation(grammar_data, input_string)
 
             if parse_function(grammar_data, input_string):
                 print("yes")
