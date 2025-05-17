@@ -13,4 +13,4 @@ A -> A b
 1
 S -> 0S1 /eps
 1
-S -> aSb ab
+S -> aSb /eps

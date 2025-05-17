@@ -55,7 +55,7 @@ def print_derivation(grammar_data, input):
 
     derivation_table = []
 
-    while stack and input_string:
+    while True:
         stack_top = stack[-1]
         current_input = input_string[0]
 

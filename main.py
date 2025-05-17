@@ -19,7 +19,6 @@ def read_grammars():
 
                 grammar = {}
                 symbols = set()
-                terminals = set()
                 non_terminals = set()
 
                 for i in range(num_productions):

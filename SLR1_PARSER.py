@@ -211,14 +211,6 @@ def print_slr_table(grammar_data):
         for item in state:
             print(f"  {item}")
 
-    # Check and show conflicts
-    if 'conflicts' in grammar_data and grammar_data['conflicts']:
-        print("\nDetected conflicts:")
-        for conflict in grammar_data['conflicts']:
-            print(conflict)
-
-    return action, goto_table
-
 def print_reduction(grammar_data, input_string):
 
     action, goto_table, _ = create_slr_table(grammar_data)
@@ -227,7 +219,6 @@ def print_reduction(grammar_data, input_string):
     symbols = ['$']  # Symbol stack
     input_string = input_string + '$'
     input_pos = 0
-    reductions = []  # To store reductions
 
     steps = []
 
@@ -283,9 +274,8 @@ def print_reduction(grammar_data, input_string):
 
             right_str = right if right else 'ε'
             action_msg = f"Reduce {left} -> {right_str}"
-            reductions.append(f"{left} -> {right_str}")
 
-            steps.append([stack_str, symbols_str, input_str, action_msg, ' '.join(reductions)])
+            steps.append([stack_str, symbols_str, input_str, action_msg])
 
         elif act == 'accept':
             # Accept: String is valid
@@ -299,7 +289,6 @@ def is_slr1(grammar_data):
     create_slr_table(grammar_data.copy())
 
     if 'conflicts' in grammar_data and grammar_data['conflicts']:
-        print("\nDetected conflicts:")
         return False
 
     return True

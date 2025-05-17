@@ -28,7 +28,7 @@ def compute_first_sets(grammar_data):
                     continue
 
                 all_can_derive_epsilon = True
-                for i, symbol in enumerate(production):
+                for symbol in production:
                     if symbol not in first_sets:
                         if symbol in terminals:
                             first_sets[symbol] = {symbol}
@@ -108,7 +108,7 @@ def compute_follow_sets(grammar_data, first_sets=None):
                     continue
 
                 for i, symbol in enumerate(production):
-                    # Solo nos interesan los no terminales
+
                     if symbol not in non_terminals:
                         continue
 
