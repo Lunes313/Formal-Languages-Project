@@ -12,40 +12,21 @@ def compute_first_sets(grammar_data):
     for nt in non_terminals:
         first_sets[nt] = set()
 
-    if 'ε' in terminals:
-        first_sets['ε'] = {'ε'}
-
     changed = True
     while changed:
         changed = False
 
         for nt in non_terminals:
             for production in grammar[nt]:
-                if production == 'ε':
-                    if 'ε' not in first_sets[nt]:
-                        first_sets[nt].add('ε')
-                        changed = True
-                    continue
-
                 all_can_derive_epsilon = True
                 for symbol in production:
-                    if symbol not in first_sets:
-                        if symbol in terminals:
-                            first_sets[symbol] = {symbol}
-                        else:
-                            first_sets[symbol] = set()
+                    new_symbols = first_sets[symbol]
+                    old_size = len(first_sets[nt])
+                    first_sets[nt].update(new_symbols)
+                    if len(first_sets[nt]) > old_size:
+                        changed = True
 
-                    if symbol in first_sets:
-                        new_symbols = first_sets[symbol] - {'ε'}
-                        old_size = len(first_sets[nt])
-                        first_sets[nt].update(new_symbols)
-                        if len(first_sets[nt]) > old_size:
-                            changed = True
-
-                        if 'ε' not in first_sets[symbol]:
-                            all_can_derive_epsilon = False
-                            break
-                    else:
+                    if 'ε' not in first_sets[symbol]:
                         all_can_derive_epsilon = False
                         break
 
